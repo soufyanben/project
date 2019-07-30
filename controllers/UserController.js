@@ -60,19 +60,29 @@ exports.user_register =  (req, res) => {
                 });
             })
           }
-exports.user_social_auth = (data, callback){
-    User.findOne({'socialId': data.id, function(err, user){
-            if(err) { return callback(err);}
-            if(user){
-                return callback(err, user);
-            }else {
-                const userData = {
-                    username : data.displayName,
-                    socialId: data.id
-                };
-                const newUser = new User(userData);
-                newUser.save(callback(err, user)                     
-            }
+          exports.user_social_auth = (data, callback){
+            //Let's check if an a user with the email given in the data is already exisiting
+            //since the email is what tells users appart from eachother
+            User.findOne({'email': data.email, function(err, user){
+                    if(err) { return callback(err);}
+                    if(user){
+                        //The user with the same email exists => we update the socialId field 
+                        user.socialId = data.id;
+                        let newUser = user.save();
+                        return callback(null, newUser); //err here is null, so you can specify that it is null. 
+                    }else {
+                        //There is no new user, making a new one. 
+                        //it would be very usefull if you validate the data somewhere 
+                        //if(validate(data)) create new user ;
+                        //else return cb(null);
+                        const userData = {
+                            username : data.displayName,
+                            socialId: data.id,
+                            email:data.email
+                        };
+                        const newUser = new User(userData);
+                        newUser.save(callback(err, user));                     
+                    }
+                }
+            })
         }
-    })
-}
